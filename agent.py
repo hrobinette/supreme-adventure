@@ -1,60 +1,57 @@
 """
-Multi-turn chatbot agent with web search using the Anthropic Messages API.
+RevOps job-hunting agent — run daily to surface 2 opportunities to apply to.
 
 Usage:
-    pip install -r requirements.txt
-    export ANTHROPIC_API_KEY="your-api-key"
+    python setup.py          # first time only
+    export AGENT_ID=agent_...
+    export ENV_ID=env_...
     python agent.py
 """
 
+import os
 import anthropic
 
-SYSTEM_PROMPT = "You are a helpful assistant with access to web search."
-MODEL = "claude-opus-4-6"
-TOOLS = [{"type": "web_search_20260209", "name": "web_search"}]
-MAX_CONTINUATIONS = 5  # safety limit for pause_turn loops
+AGENT_ID = os.environ["AGENT_ID"]
+ENV_ID = os.environ["ENV_ID"]
+
+KICKOFF = "Find me 2 RevOps opportunities for today."
 
 
-def run_agent() -> None:
+def run() -> None:
     client = anthropic.Anthropic()
-    messages: list[anthropic.MessageParam] = []
 
-    print("Agent ready (web search enabled). Type 'quit' or 'exit' to stop.\n")
+    # Each run gets a fresh session (isolated container, clean state).
+    session = client.beta.sessions.create(
+        agent=AGENT_ID,
+        environment_id=ENV_ID,
+        title="Daily RevOps hunt",
+    )
+    print(f"Session: {session.id}\n")
 
-    while True:
-        user_input = input("You: ").strip()
-        if not user_input:
-            continue
-        if user_input.lower() in ("quit", "exit"):
-            print("Goodbye!")
-            break
+    # Open the stream before sending — so we don't miss early events.
+    with client.beta.sessions.stream(session_id=session.id) as stream:
+        client.beta.sessions.events.send(
+            session_id=session.id,
+            events=[
+                {
+                    "type": "user.message",
+                    "content": [{"type": "text", "text": KICKOFF}],
+                }
+            ],
+        )
 
-        messages.append({"role": "user", "content": user_input})
-        print("Agent: ", end="", flush=True)
+        for event in stream:
+            if event.type == "agent.message":
+                for block in event.content:
+                    if block.type == "text":
+                        print(block.text, end="", flush=True)
+            elif event.type == "agent.thinking":
+                pass  # extended thinking runs silently
+            elif event.type in ("session.status_idle", "session.status_terminated"):
+                break  # agent finished; no custom tools so requires_action won't fire
 
-        # Inner loop handles pause_turn: fired when the server-side search loop
-        # hits its iteration limit and needs us to re-send to continue.
-        for _ in range(MAX_CONTINUATIONS + 1):
-            with client.messages.stream(
-                model=MODEL,
-                max_tokens=16000,
-                system=SYSTEM_PROMPT,
-                tools=TOOLS,
-                messages=messages,
-            ) as stream:
-                for text in stream.text_stream:
-                    print(text, end="", flush=True)
-                final = stream.get_final_message()
-
-            # Store the full content list (includes server_tool_use blocks)
-            # so the model has context about what searches were run.
-            messages.append({"role": "assistant", "content": final.content})
-
-            if final.stop_reason != "pause_turn":
-                break
-
-        print()  # newline after response
+    print("\n")
 
 
 if __name__ == "__main__":
-    run_agent()
+    run()
