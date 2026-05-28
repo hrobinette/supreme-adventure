@@ -17,12 +17,7 @@ export default function SharePage({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen">
-      <Navbar
-        showNav={false}
-        readOnlyLabel={
-          snapshot && snapshot !== "missing" ? snapshot.label : undefined
-        }
-      />
+      <Navbar showNav={false} shared={!!snapshot && snapshot !== "missing"} />
       <main className="mx-auto max-w-6xl px-4 py-8">
         {snapshot === null && (
           <p className="text-sm text-muted">Loading shared snapshot…</p>
@@ -51,7 +46,7 @@ export default function SharePage({ params }: { params: { id: string } }) {
           <>
             <div className="mb-6">
               <h1 className="text-2xl font-bold tracking-tight">
-                {snapshot.label}
+                Sales <span className="brand-text">Insights</span>
               </h1>
               <p className="text-sm text-muted">
                 Shared snapshot · {new Date(snapshot.created_at).toLocaleString()}

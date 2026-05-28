@@ -5,10 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 
 interface NavbarProps {
   showNav?: boolean;
-  readOnlyLabel?: string;
+  shared?: boolean;
 }
 
-export default function Navbar({ showNav = true, readOnlyLabel }: NavbarProps) {
+export default function Navbar({ showNav = true, shared = false }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -38,9 +38,9 @@ export default function Navbar({ showNav = true, readOnlyLabel }: NavbarProps) {
           <span className="text-sm font-semibold tracking-wide text-fg">
             MERIDIAN
           </span>
-          {readOnlyLabel && (
+          {shared && (
             <span className="ml-2 rounded-full border border-accent-amber/30 bg-accent-amber/10 px-2 py-0.5 text-xs font-medium text-accent-amber">
-              Shared · {readOnlyLabel}
+              Shared
             </span>
           )}
         </Link>
