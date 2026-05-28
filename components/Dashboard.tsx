@@ -16,12 +16,16 @@ import {
 } from "recharts";
 import { Deal } from "@/lib/types";
 import {
+  avgDaysToCloseByRep,
   currency,
+  pipelineByStage,
   repPerformance,
+  revenueByIndustry,
   revenueByProductLine,
   revenueOverTime,
   summarize,
   timeToClose,
+  winRateByCompetitor,
   winRateByLeadSource,
 } from "@/lib/insights";
 
@@ -105,6 +109,10 @@ export default function Dashboard({ deals }: { deals: Deal[] }) {
   const products = revenueByProductLine(deals);
   const sources = winRateByLeadSource(deals);
   const ttc = timeToClose(deals);
+  const pipeline = pipelineByStage(deals);
+  const repDays = avgDaysToCloseByRep(deals).slice(0, 12);
+  const industries = revenueByIndustry(deals);
+  const competitors = winRateByCompetitor(deals);
   const wonCount = deals.filter((d) => d.deal_stage === "Closed Won").length;
 
   return (
@@ -258,6 +266,124 @@ export default function Dashboard({ deals }: { deals: Deal[] }) {
                 formatter={(v: number) => [`${Math.round(v * 100)}%`, "Win rate"]}
               />
               <Bar dataKey="winRate" fill="url(#wr)" radius={[5, 5, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        <Card title="Pipeline by Stage" subtitle="Deals currently in each stage">
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={pipeline} layout="vertical" margin={{ left: 28, right: 12 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#16203a" horizontal={false} />
+              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: "#8A99B5" }} stroke="#1E2A44" />
+              <YAxis
+                type="category"
+                dataKey="stage"
+                tick={{ fontSize: 11, fill: "#8A99B5" }}
+                stroke="#1E2A44"
+                width={104}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                cursor={{ fill: "#38BDF8", fillOpacity: 0.06 }}
+                formatter={(v: number, _n, p) => [
+                  `${v} deals · ${currency((p.payload as { value: number }).value)}`,
+                  "Pipeline",
+                ]}
+              />
+              <Bar dataKey="count" radius={[0, 5, 5, 0]}>
+                {pipeline.map((_, i) => (
+                  <Cell key={i} fill={SERIES[i % SERIES.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        <Card title="Avg Days to Close by Rep" subtitle="Closed-won deals only">
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={repDays} layout="vertical" margin={{ left: 24, right: 12 }}>
+              <defs>
+                <linearGradient id="days" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#0FB98E" />
+                  <stop offset="100%" stopColor="#19E3B1" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#16203a" horizontal={false} />
+              <XAxis
+                type="number"
+                tickFormatter={(v) => `${v}d`}
+                tick={{ fontSize: 11, fill: "#8A99B5" }}
+                stroke="#1E2A44"
+              />
+              <YAxis
+                type="category"
+                dataKey="rep"
+                tick={{ fontSize: 11, fill: "#8A99B5" }}
+                stroke="#1E2A44"
+                width={96}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                cursor={{ fill: "#19E3B1", fillOpacity: 0.06 }}
+                formatter={(v: number) => [`${v} days`, "Avg to close"]}
+              />
+              <Bar dataKey="avgDays" fill="url(#days)" radius={[0, 5, 5, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        <Card title="Revenue by Industry" subtitle="Closed-won revenue by vertical">
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={industries} layout="vertical" margin={{ left: 36, right: 12 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#16203a" horizontal={false} />
+              <XAxis
+                type="number"
+                tickFormatter={(v) => compactCurrency(v)}
+                tick={{ fontSize: 11, fill: "#8A99B5" }}
+                stroke="#1E2A44"
+              />
+              <YAxis
+                type="category"
+                dataKey="name"
+                tick={{ fontSize: 11, fill: "#8A99B5" }}
+                stroke="#1E2A44"
+                width={120}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                cursor={{ fill: "#F59E0B", fillOpacity: 0.06 }}
+                formatter={(v: number) => [currency(v), "Revenue"]}
+              />
+              <Bar dataKey="value" fill="#F59E0B" radius={[0, 5, 5, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        <Card title="Competitor Impact on Win Rate" subtitle="Win rate when each competitor is mentioned">
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={competitors} margin={{ left: -8, right: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#16203a" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#8A99B5" }} stroke="#1E2A44" />
+              <YAxis
+                tickFormatter={(v) => `${Math.round(v * 100)}%`}
+                domain={[0, 1]}
+                tick={{ fontSize: 11, fill: "#8A99B5" }}
+                stroke="#1E2A44"
+                width={44}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                cursor={{ fill: "#EC4899", fillOpacity: 0.08 }}
+                formatter={(v: number, _n, p) => [
+                  `${Math.round(v * 100)}% (${(p.payload as { wonDeals: number }).wonDeals}/${(p.payload as { closedDeals: number }).closedDeals})`,
+                  "Win rate",
+                ]}
+              />
+              <Bar dataKey="winRate" radius={[5, 5, 0, 0]}>
+                {competitors.map((_, i) => (
+                  <Cell key={i} fill={SERIES[i % SERIES.length]} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </Card>

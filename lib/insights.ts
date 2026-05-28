@@ -161,6 +161,98 @@ export function winRateByLeadSource(deals: Deal[]): LeadSourceStat[] {
     .sort((a, b) => b.winRate - a.winRate);
 }
 
+export const STAGE_ORDER = [
+  "Prospecting",
+  "Qualified",
+  "Demo Scheduled",
+  "Proposal Sent",
+  "Negotiation",
+  "Closed Won",
+];
+
+export interface StageStat {
+  stage: string;
+  count: number;
+  value: number;
+}
+
+export function pipelineByStage(deals: Deal[]): StageStat[] {
+  const map = new Map<string, { count: number; value: number }>();
+  for (const d of deals) {
+    const cur = map.get(d.deal_stage) ?? { count: 0, value: 0 };
+    cur.count += 1;
+    cur.value += d.deal_value;
+    map.set(d.deal_stage, cur);
+  }
+  return STAGE_ORDER.filter((s) => map.has(s)).map((stage) => ({
+    stage,
+    count: map.get(stage)!.count,
+    value: map.get(stage)!.value,
+  }));
+}
+
+export function revenueByIndustry(deals: Deal[]): CategoryStat[] {
+  const map = new Map<string, number>();
+  for (const d of deals) {
+    if (d.deal_stage !== CLOSED_WON) continue;
+    map.set(d.industry, (map.get(d.industry) ?? 0) + d.deal_value);
+  }
+  return [...map.entries()]
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+}
+
+export interface CompetitorStat {
+  name: string;
+  winRate: number;
+  wonDeals: number;
+  closedDeals: number;
+}
+
+export function winRateByCompetitor(deals: Deal[]): CompetitorStat[] {
+  const map = new Map<string, { won: number; closed: number }>();
+  for (const d of deals) {
+    if (!isClosed(d.deal_stage)) continue;
+    const key = d.competitor_mentioned || "None";
+    const cur = map.get(key) ?? { won: 0, closed: 0 };
+    cur.closed += 1;
+    if (d.deal_stage === CLOSED_WON) cur.won += 1;
+    map.set(key, cur);
+  }
+  return [...map.entries()]
+    .map(([name, v]) => ({
+      name,
+      winRate: v.closed > 0 ? v.won / v.closed : 0,
+      wonDeals: v.won,
+      closedDeals: v.closed,
+    }))
+    .sort((a, b) => b.winRate - a.winRate);
+}
+
+export interface RepDaysStat {
+  rep: string;
+  avgDays: number;
+  deals: number;
+}
+
+export function avgDaysToCloseByRep(deals: Deal[]): RepDaysStat[] {
+  const rows = timeToClose(deals);
+  const map = new Map<string, { total: number; count: number }>();
+  for (const r of rows) {
+    const cur = map.get(r.rep) ?? { total: 0, count: 0 };
+    cur.total += r.daysToClose;
+    cur.count += 1;
+    map.set(r.rep, cur);
+  }
+  return [...map.entries()]
+    .map(([rep, v]) => ({
+      rep,
+      avgDays: v.count > 0 ? Math.round(v.total / v.count) : 0,
+      deals: v.count,
+    }))
+    .sort((a, b) => a.avgDays - b.avgDays);
+}
+
 export interface TimeToCloseRow {
   deal_id: string;
   company: string;

@@ -54,7 +54,6 @@ export default function InsightsPage() {
             <h1 className="text-2xl font-bold tracking-tight">
               Sales <span className="brand-text">Insights</span>
             </h1>
-            <p className="text-sm text-muted">{label}</p>
           </div>
           {deals && deals.length > 0 && (
             <button
