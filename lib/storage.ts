@@ -1,17 +1,10 @@
 import { Deal, Snapshot } from "./types";
 
 /**
- * Snapshot persistence is intentionally behind this interface so the backend
- * can be swapped without touching the UI. Today it's backed by the browser's
- * localStorage (local-first). To move to cross-device sharing, add a Supabase
- * implementation of `SnapshotStore` and select it when the env vars are set.
+ * Snapshots are persisted via server API routes backed by Supabase. When
+ * Supabase isn't configured (the API responds 501) or is unreachable, we fall
+ * back to the browser's localStorage so the app still works locally.
  */
-export interface SnapshotStore {
-  save(snapshot: Snapshot): Promise<void>;
-  get(id: string): Promise<Snapshot | null>;
-  list(): Promise<Snapshot[]>;
-  remove(id: string): Promise<void>;
-}
 
 const SNAPSHOT_PREFIX = "meridian:snapshot:";
 const WORKING_KEY = "meridian:working";
@@ -20,58 +13,72 @@ function hasWindow(): boolean {
   return typeof window !== "undefined";
 }
 
-const localStore: SnapshotStore = {
-  async save(snapshot) {
+const localStore = {
+  save(snapshot: Snapshot): void {
     if (!hasWindow()) return;
     localStorage.setItem(
       SNAPSHOT_PREFIX + snapshot.id,
       JSON.stringify(snapshot)
     );
   },
-  async get(id) {
+  get(id: string): Snapshot | null {
     if (!hasWindow()) return null;
     const raw = localStorage.getItem(SNAPSHOT_PREFIX + id);
     return raw ? (JSON.parse(raw) as Snapshot) : null;
   },
-  async list() {
-    if (!hasWindow()) return [];
-    const out: Snapshot[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(SNAPSHOT_PREFIX)) {
-        const raw = localStorage.getItem(key);
-        if (raw) out.push(JSON.parse(raw) as Snapshot);
-      }
-    }
-    return out.sort((a, b) => b.created_at.localeCompare(a.created_at));
-  },
-  async remove(id) {
-    if (!hasWindow()) return;
-    localStorage.removeItem(SNAPSHOT_PREFIX + id);
-  },
 };
 
-// When Supabase is wired up, return a SupabaseStore here instead.
-export const store: SnapshotStore = localStore;
-
 function makeId(): string {
-  const rand = Math.random().toString(36).slice(2, 8);
-  const time = Date.now().toString(36);
-  return `${time}${rand}`;
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export interface CreateResult {
+  id: string;
+  remote: boolean;
 }
 
 export async function createSnapshot(
   deals: Deal[],
   label: string
-): Promise<Snapshot> {
+): Promise<CreateResult> {
+  // Try the server (Supabase) first.
+  try {
+    const res = await fetch("/api/snapshots", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label, deals }),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { id: string };
+      return { id: data.id, remote: true };
+    }
+    // 501 = Supabase not configured; anything else also falls back locally.
+  } catch {
+    /* network error — fall back to local */
+  }
+
   const snapshot: Snapshot = {
     id: makeId(),
     label: label || "Untitled snapshot",
     created_at: new Date().toISOString(),
     deals,
   };
-  await store.save(snapshot);
-  return snapshot;
+  localStore.save(snapshot);
+  return { id: snapshot.id, remote: false };
+}
+
+export async function getSnapshot(id: string): Promise<Snapshot | null> {
+  try {
+    const res = await fetch(`/api/snapshots/${id}`);
+    if (res.ok) return (await res.json()) as Snapshot;
+    if (res.status === 404) {
+      // Might be a local-only snapshot created before Supabase was set up.
+      return localStore.get(id);
+    }
+  } catch {
+    /* network error — fall back to local */
+  }
+  return localStore.get(id);
 }
 
 // --- Working (in-progress) dataset for the current authoring session ---

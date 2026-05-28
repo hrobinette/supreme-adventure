@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Dashboard from "@/components/Dashboard";
-import { store } from "@/lib/storage";
+import { getSnapshot } from "@/lib/storage";
 import { Snapshot } from "@/lib/types";
 
 export default function SharePage({ params }: { params: { id: string } }) {
@@ -12,7 +12,7 @@ export default function SharePage({ params }: { params: { id: string } }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null | "missing">(null);
 
   useEffect(() => {
-    store.get(id).then((s) => setSnapshot(s ?? "missing"));
+    getSnapshot(id).then((s) => setSnapshot(s ?? "missing"));
   }, [id]);
 
   return (
@@ -34,9 +34,9 @@ export default function SharePage({ params }: { params: { id: string } }) {
               Snapshot not found
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              This shared link isn&apos;t available in this browser. Local
-              snapshots only open where they were created — connect Supabase to
-              share across devices.
+              This shared link isn&apos;t available. The snapshot may no longer
+              exist, or (if Supabase isn&apos;t configured) it was created in a
+              different browser.
             </p>
             <Link
               href="/login"

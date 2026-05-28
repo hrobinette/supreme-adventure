@@ -30,17 +30,29 @@ APP_PASSWORD=OPS123
 
 ## Sharing & Supabase
 
-Snapshots are persisted through the `SnapshotStore` interface in `lib/storage.ts`.
-The current implementation uses the browser's `localStorage`, so shared links open
-in the same browser where they were created.
+The "Share" button on the insights page saves a snapshot and returns a
+`/share/{id}` link. Persistence goes through server API routes
+(`app/api/snapshots`) backed by Supabase, using a **server-only service-role
+key** — no Supabase keys are ever sent to the browser. If Supabase isn't
+configured, snapshots fall back to the browser's `localStorage` (same-browser
+only), so the app always works.
 
 To enable cross-device sharing:
 
-1. Create a Supabase project and a `snapshots` table:
-   `id text primary key, created_at timestamptz, label text, deals jsonb`.
-2. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to your env.
-3. Add a Supabase-backed `SnapshotStore` implementation and select it in
-   `lib/storage.ts` when those env vars are present.
+1. In Supabase, open **SQL Editor** and run `supabase/schema.sql` to create the
+   `snapshots` table (RLS enabled, no public policies — only the service role
+   can access it).
+2. In **Settings → API**, copy the **Project URL** and the **service_role**
+   secret (not the anon key) into your env:
+   ```
+   SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-secret
+   ```
+3. Restart `npm run dev`. New shares now persist to Supabase and open on any
+   device.
+
+On Vercel, add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in the project's
+Environment Variables.
 
 ## Deploying
 

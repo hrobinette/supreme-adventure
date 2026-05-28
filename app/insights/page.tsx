@@ -13,6 +13,7 @@ export default function InsightsPage() {
   const [shareUrl, setShareUrl] = useState("");
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [remote, setRemote] = useState(false);
 
   useEffect(() => {
     const working = getWorkingDeals();
@@ -29,8 +30,9 @@ export default function InsightsPage() {
     setSharing(true);
     setCopied(false);
     try {
-      const snapshot = await createSnapshot(deals, label);
-      const url = `${window.location.origin}/share/${snapshot.id}`;
+      const { id, remote: isRemote } = await createSnapshot(deals, label);
+      setRemote(isRemote);
+      const url = `${window.location.origin}/share/${id}`;
       setShareUrl(url);
       try {
         await navigator.clipboard.writeText(url);
@@ -87,8 +89,9 @@ export default function InsightsPage() {
               </Link>
             </div>
             <p className="mt-2 text-xs text-brand-700/80">
-              Snapshots are stored locally in this browser for now. Once
-              Supabase is connected, this link will open on any device.
+              {remote
+                ? "Saved to Supabase — this link will open on any device."
+                : "Supabase isn't configured, so this snapshot is stored locally in this browser only."}
             </p>
           </div>
         )}
