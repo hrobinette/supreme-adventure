@@ -51,14 +51,16 @@ export default function InsightsPage() {
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-slate-900">Insights</h1>
-            <p className="text-sm text-slate-500">{label}</p>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Sales <span className="brand-text">Insights</span>
+            </h1>
+            <p className="text-sm text-muted">{label}</p>
           </div>
           {deals && deals.length > 0 && (
             <button
               onClick={share}
               disabled={sharing}
-              className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-gradient px-4 py-2 text-sm font-semibold text-ink shadow-glow transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
@@ -69,8 +71,8 @@ export default function InsightsPage() {
         </div>
 
         {shareUrl && (
-          <div className="mt-4 rounded-lg border border-brand-200 bg-brand-50 p-4">
-            <p className="text-sm font-medium text-brand-800">
+          <div className="mt-4 card border-brand/20 p-4" style={{ boxShadow: "0 0 0 1px rgba(25,227,177,0.15)" }}>
+            <p className="text-sm font-medium text-brand">
               {copied ? "Link copied to clipboard." : "Shareable link created."}
             </p>
             <div className="mt-2 flex items-center gap-2">
@@ -78,17 +80,17 @@ export default function InsightsPage() {
                 readOnly
                 value={shareUrl}
                 onFocus={(e) => e.currentTarget.select()}
-                className="w-full rounded-md border border-brand-200 bg-white px-3 py-1.5 text-sm text-slate-700"
+                className="w-full rounded-lg border border-line bg-ink px-3 py-1.5 text-sm text-fg"
               />
               <Link
                 href={shareUrl}
                 target="_blank"
-                className="shrink-0 rounded-md border border-brand-300 px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-100"
+                className="shrink-0 rounded-lg border border-brand/40 px-3 py-1.5 text-sm font-medium text-brand transition-colors hover:bg-brand/10"
               >
                 Open
               </Link>
             </div>
-            <p className="mt-2 text-xs text-brand-700/80">
+            <p className="mt-2 text-xs text-muted">
               {remote
                 ? "Saved to Supabase — this link will open on any device."
                 : "Supabase isn't configured, so this snapshot is stored locally in this browser only."}
@@ -98,15 +100,13 @@ export default function InsightsPage() {
 
         <div className="mt-6">
           {deals === null ? (
-            <p className="text-sm text-slate-400">Loading…</p>
+            <p className="text-sm text-muted">Loading…</p>
           ) : deals.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
-              <p className="text-sm text-slate-600">
-                No data loaded yet.
-              </p>
+            <div className="card border-dashed p-10 text-center">
+              <p className="text-sm text-muted">No data loaded yet.</p>
               <Link
                 href="/upload"
-                className="mt-3 inline-block rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+                className="mt-3 inline-block rounded-lg bg-brand-gradient px-4 py-2 text-sm font-semibold text-ink shadow-glow hover:opacity-90"
               >
                 Upload a CSV
               </Link>

@@ -58,14 +58,14 @@ export default function UploadForm() {
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        className={`flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed bg-white p-8 text-center transition-colors ${
+        className={`flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
           dragging
-            ? "border-brand-500 bg-brand-50"
-            : "border-slate-300 hover:border-brand-400"
+            ? "border-brand bg-brand/5"
+            : "border-line bg-surface/60 hover:border-brand/60"
         }`}
       >
         <svg
-          className="mb-3 h-10 w-10 text-slate-400"
+          className="mb-3 h-10 w-10 text-muted"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -77,10 +77,10 @@ export default function UploadForm() {
             d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"
           />
         </svg>
-        <p className="text-sm font-medium text-slate-700">
+        <p className="text-sm font-medium text-fg">
           {fileName ? fileName : "Upload Data (CSV)"}
         </p>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs text-muted">
           Click to browse or drag and drop a .csv file
         </p>
         <input
@@ -95,16 +95,14 @@ export default function UploadForm() {
         />
       </div>
 
-      {busy && (
-        <p className="mt-3 text-sm text-slate-500">Reading file…</p>
-      )}
+      {busy && <p className="mt-3 text-sm text-muted">Reading file…</p>}
 
       {errors.length > 0 && (
-        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
-          <p className="text-sm font-medium text-red-800">
+        <div className="mt-4 rounded-xl border border-accent-pink/30 bg-accent-pink/10 p-4">
+          <p className="text-sm font-medium text-accent-pink">
             We couldn&apos;t use this file:
           </p>
-          <ul className="mt-1 list-inside list-disc text-sm text-red-700">
+          <ul className="mt-1 list-inside list-disc text-sm text-accent-pink/90">
             {errors.map((e, i) => (
               <li key={i}>{e}</li>
             ))}
@@ -113,7 +111,7 @@ export default function UploadForm() {
       )}
 
       {ready && (
-        <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+        <div className="mt-4 rounded-xl border border-brand/30 bg-brand/10 p-4 text-sm text-brand">
           Parsed <strong>{deals.length}</strong> deals successfully.
         </div>
       )}
@@ -122,7 +120,7 @@ export default function UploadForm() {
         <button
           onClick={submit}
           disabled={!ready}
-          className="rounded-md bg-brand-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-brand-gradient px-5 py-2 text-sm font-semibold text-ink shadow-glow transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Submit
         </button>

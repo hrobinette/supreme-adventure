@@ -36,13 +36,10 @@ export default function LoginForm() {
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-    >
+    <form onSubmit={onSubmit} className="mt-8 card p-6">
       <label
         htmlFor="password"
-        className="block text-sm font-medium text-slate-700"
+        className="block text-sm font-medium text-fg"
       >
         Password
       </label>
@@ -52,14 +49,14 @@ export default function LoginForm() {
         autoFocus
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password Request"
-        className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+        placeholder="Enter password"
+        className="mt-2 w-full rounded-lg border border-line bg-ink px-3 py-2 text-sm text-fg outline-none transition-colors placeholder:text-muted/60 focus:border-brand focus:ring-2 focus:ring-brand/20"
       />
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-accent-pink">{error}</p>}
       <button
         type="submit"
         disabled={loading || password.length === 0}
-        className="mt-4 w-full rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-4 w-full rounded-lg bg-brand-gradient px-4 py-2 text-sm font-semibold text-ink shadow-glow transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? "Signing in…" : "Submit"}
       </button>

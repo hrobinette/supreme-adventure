@@ -3,9 +3,39 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply text-fg antialiased;
+  background-color: #070b16;
+  background-image:
+    radial-gradient(900px 500px at 12% -8%, rgba(25, 227, 177, 0.12), transparent 60%),
+    radial-gradient(1000px 600px at 95% 0%, rgba(139, 92, 246, 0.12), transparent 55%),
+    linear-gradient(180deg, #070b16 0%, #0b1120 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Thin, themed scrollbars for the dark UI */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1e2a44 transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #1e2a44;
+  border-radius: 9999px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-surface/80 shadow-card backdrop-blur-sm;
+  }
+  .brand-text {
+    @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
 }

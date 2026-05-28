@@ -25,22 +25,22 @@ export default function SharePage({ params }: { params: { id: string } }) {
       />
       <main className="mx-auto max-w-6xl px-4 py-8">
         {snapshot === null && (
-          <p className="text-sm text-slate-400">Loading shared snapshot…</p>
+          <p className="text-sm text-muted">Loading shared snapshot…</p>
         )}
 
         {snapshot === "missing" && (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
-            <h1 className="text-base font-semibold text-slate-800">
+          <div className="card border-dashed p-10 text-center">
+            <h1 className="text-base font-semibold text-fg">
               Snapshot not found
             </h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-muted">
               This shared link isn&apos;t available. The snapshot may no longer
               exist, or (if Supabase isn&apos;t configured) it was created in a
               different browser.
             </p>
             <Link
               href="/login"
-              className="mt-4 inline-block rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+              className="mt-4 inline-block rounded-lg bg-brand-gradient px-4 py-2 text-sm font-semibold text-ink shadow-glow hover:opacity-90"
             >
               Go to app
             </Link>
@@ -50,10 +50,10 @@ export default function SharePage({ params }: { params: { id: string } }) {
         {snapshot && snapshot !== "missing" && (
           <>
             <div className="mb-6">
-              <h1 className="text-xl font-semibold text-slate-900">
+              <h1 className="text-2xl font-bold tracking-tight">
                 {snapshot.label}
               </h1>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted">
                 Shared snapshot · {new Date(snapshot.created_at).toLocaleString()}
               </p>
             </div>
