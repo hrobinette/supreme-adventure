@@ -7,6 +7,9 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Funnel,
+  FunnelChart,
+  LabelList,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -35,13 +38,15 @@ function Card({
   title,
   subtitle,
   children,
+  className = "",
 }: {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <section className="card p-5">
+    <section className={`card p-5 ${className}`}>
       <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
         {title}
       </h2>
@@ -110,6 +115,9 @@ export default function Dashboard({ deals }: { deals: Deal[] }) {
   const sources = winRateByLeadSource(deals);
   const ttc = timeToClose(deals);
   const pipeline = pipelineByStage(deals);
+  const funnelData = pipeline
+    .filter((s) => s.stage !== "Closed Won")
+    .map((s, i) => ({ ...s, fill: SERIES[i % SERIES.length] }));
   const repDays = avgDaysToCloseByRep(deals).slice(0, 12);
   const industries = revenueByIndustry(deals);
   const competitors = winRateByCompetitor(deals);
@@ -145,6 +153,41 @@ export default function Dashboard({ deals }: { deals: Deal[] }) {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card
+          title="Pipeline Funnel"
+          subtitle="Open deals by stage (excludes closed deals)"
+          className="lg:col-span-2"
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <FunnelChart>
+              <Tooltip
+                contentStyle={tooltipStyle}
+                formatter={(v: number, _n, p) => {
+                  const row = (p as { payload: { value: number; stage: string } })
+                    .payload;
+                  return [`${v} deals · ${currency(row.value)}`, row.stage];
+                }}
+              />
+              <Funnel dataKey="count" data={funnelData} isAnimationActive>
+                <LabelList
+                  position="right"
+                  dataKey="stage"
+                  fill="#E6ECF5"
+                  stroke="none"
+                  fontSize={13}
+                />
+                <LabelList
+                  position="left"
+                  dataKey="count"
+                  fill="#8A99B5"
+                  stroke="none"
+                  fontSize={13}
+                />
+              </Funnel>
+            </FunnelChart>
+          </ResponsiveContainer>
+        </Card>
+
         <Card title="Revenue Over Time" subtitle="Closed-won revenue by close month">
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={revenue} margin={{ left: -8, right: 8, top: 4 }}>
@@ -266,35 +309,6 @@ export default function Dashboard({ deals }: { deals: Deal[] }) {
                 formatter={(v: number) => [`${Math.round(v * 100)}%`, "Win rate"]}
               />
               <Bar dataKey="winRate" fill="url(#wr)" radius={[5, 5, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-
-        <Card title="Pipeline by Stage" subtitle="Deals currently in each stage">
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={pipeline} layout="vertical" margin={{ left: 28, right: 12 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#16203a" horizontal={false} />
-              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: "#8A99B5" }} stroke="#1E2A44" />
-              <YAxis
-                type="category"
-                dataKey="stage"
-                tick={{ fontSize: 11, fill: "#8A99B5" }}
-                stroke="#1E2A44"
-                width={104}
-              />
-              <Tooltip
-                contentStyle={tooltipStyle}
-                cursor={{ fill: "#38BDF8", fillOpacity: 0.06 }}
-                formatter={(v: number, _n, p) => [
-                  `${v} deals · ${currency((p.payload as { value: number }).value)}`,
-                  "Pipeline",
-                ]}
-              />
-              <Bar dataKey="count" radius={[0, 5, 5, 0]}>
-                {pipeline.map((_, i) => (
-                  <Cell key={i} fill={SERIES[i % SERIES.length]} />
-                ))}
-              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </Card>
